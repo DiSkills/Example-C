@@ -3,7 +3,7 @@
 #define ARRAY_SIZE(ITEM) (sizeof(ITEM) / sizeof(*(ITEM)))
 
 #define MAKE_ARRAY_SUM_FUNCTION(FUNNAME, TYPE) \
-    TYPE FUNNAME(const TYPE *a, int n) \
+    static TYPE FUNNAME(const TYPE *a, int n) \
     { \
         TYPE s = 0; \
         for (; n > 0; s += *a, a++, n--) \

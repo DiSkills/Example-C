@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
-double discrim(double a, double b, double c)
+static double discrim(double a, double b, double c)
 {
     return b * b - 4 * a * c;
 }
