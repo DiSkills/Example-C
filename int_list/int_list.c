@@ -4,65 +4,67 @@
 #include "int_list.h"
 
 
-struct item *int_array_to_list(const int *array, int len)
+struct int_list *int_array_to_list(const int *array, int len)
 {
     int i;
-    struct item *head = NULL;
+    struct int_list *list = malloc(sizeof(struct int_list));
 
-    for (i = len - 1; i >= 0; i--) {
+    list->size = len;
+    list->head = NULL;
+    list->tail = NULL;
+    for (i = 0; i < len; i++) {
         struct item *tmp = malloc(sizeof(struct item));
         tmp->data = array[i];
-        tmp->next = head;
-        head = tmp;
+        tmp->next = NULL;
+
+        if (list->tail) {
+            list->tail->next = tmp;
+        } else {
+            list->head = tmp;
+        }
+        list->tail = tmp;
     }
 
-    return head;
+    return list;
 }
 
 
-static int length_of_int_list(const struct item *list)
+int *int_list_to_array(const struct int_list *list)
 {
-    int len = 0;
-    for (; list; list = list->next) {
-        len++;
-    }
-    return len;
-}
-
-
-int *int_list_to_array(const struct item *list)
-{
-    int i,
-        len,
+    int len,
         *array;
+    struct item *p;
 
-    len = length_of_int_list(list) + 1;
+    len = list->size + 1;
+    array = malloc(len * sizeof(int));
 
-    array = malloc(sizeof(int) * len);
-    array[0] = len - 1;
-
-    for (i = 1; i < len; i++) {
-        array[i] = list->data;
-        list = list->next;
+    *array = list->size;
+    array++;
+    for (p = list->head; p; p = p->next) {
+        *array = p->data;
+        array++;
     }
-    return array;
+    return array - len;
 }
 
 
-void delete_int_list(struct item **plist)
+void delete_int_list(struct int_list **plist)
 {
-    while (*plist) {
-        struct item *tmp = *plist;
-        *plist = (*plist)->next;
+    while ((*plist)->head) {
+        struct item *tmp = (*plist)->head;
+        (*plist)->head = (*plist)->head->next;
         free(tmp);
     }
+    free(*plist);
+    *plist = NULL;
 }
 
 
-void print_int_list(const struct item *list)
+void print_int_list(const struct int_list *list)
 {
-    for (; list; list = list->next) {
-        printf("%d ", list->data);
+    struct item *p;
+    for (p = list->head; p; p = p->next) {
+        printf("%d ", p->data);
     }
     putchar('\n');
 }

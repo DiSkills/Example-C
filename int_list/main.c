@@ -9,7 +9,7 @@ int main()
         size,
         *numbers,
         array[] = { 1, 3, 5, 7, 9, 11, 13 };
-    struct item *list;
+    struct int_list *list;
 
     size = sizeof(array) / sizeof(*array);
 

@@ -6,12 +6,19 @@ struct item {
     struct item *next;
 };
 
-struct item *int_array_to_list(const int *array, int len);
+struct int_list {
+    unsigned size;
 
-int *int_list_to_array(const struct item *list);
+    struct item *head,
+                *tail;
+};
 
-void delete_int_list(struct item **plist);
+struct int_list *int_array_to_list(const int *array, int len);
 
-void print_int_list(const struct item *list);
+int *int_list_to_array(const struct int_list *list);
+
+void delete_int_list(struct int_list **plist);
+
+void print_int_list(const struct int_list *list);
 
 #endif
