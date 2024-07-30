@@ -4,18 +4,18 @@
 
 
 enum {
-    min_string_size = 16
+    string_min_size = 16
 };
 
 
 struct string *string_init()
 {
     struct string *str = malloc(sizeof(struct string));
-    str->symbols = malloc(min_string_size * sizeof(unsigned char));
+    str->symbols = malloc(string_min_size * sizeof(unsigned char));
 
     *str->symbols = '\0';
     str->size = 0;
-    str->max_size = min_string_size;
+    str->max_size = string_min_size;
     return str;
 }
 
@@ -41,7 +41,7 @@ static void string_resize(struct string *str)
 
     str->max_size *= 2;
     str->symbols = malloc(str->max_size * sizeof(unsigned char));
-    for (i = 0; i < str->size; i++) {
+    for (i = 0; i <= str->size; i++) {
         str->symbols[i] = tmp[i];
     }
 

@@ -7,7 +7,7 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 
 
-static struct string *get_max_string_from_file(const char *filename)
+static struct string *max_string_from_file(const char *filename)
 {
     int c;
     FILE *f;
@@ -51,7 +51,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "No parameter given\n");
         return 1;
     }
-
     argc--;
     argv++;
 
@@ -59,7 +58,7 @@ int main(int argc, char **argv)
 
     max = 0;
     for (i = 0; i < argc; i++) {
-        strings[i] = get_max_string_from_file(argv[i]);
+        strings[i] = max_string_from_file(argv[i]);
         max = MAX(max, strings[i]->size);
     }
 
@@ -68,9 +67,11 @@ int main(int argc, char **argv)
             putchar('*');
         }
         printf("%s:%s\n", argv[i], strings[i]->symbols);
-        string_del(&strings[i]);
     }
 
+    for (i = 0; i < argc; i++) {
+        string_del(&strings[i]);
+    }
     free(strings);
     return 0;
 }
