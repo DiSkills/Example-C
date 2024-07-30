@@ -3,6 +3,7 @@
 
 struct item {
     int data;
+
     struct item *next;
 };
 

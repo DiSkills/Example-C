@@ -33,7 +33,7 @@ int *int_list_to_array(const struct int_list *list)
 {
     int len,
         *array;
-    struct item *p;
+    const struct item *p;
 
     len = list->size + 1;
     array = malloc(len * sizeof(int));
@@ -62,7 +62,7 @@ void delete_int_list(struct int_list **plist)
 
 void print_int_list(const struct int_list *list)
 {
-    struct item *p;
+    const struct item *p;
     for (p = list->head; p; p = p->next) {
         printf("%d ", p->data);
     }

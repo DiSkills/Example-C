@@ -1,5 +1,5 @@
-#ifndef stackdbl_h
-#define stackdbl_h
+#ifndef STACKDBL_H
+#define STACKDBL_H
 
 struct stackdbl {
     unsigned size,
