@@ -13,4 +13,8 @@ int string_compare(const char *s1, const char *s2);
 
 int string_n_compare(const char *s1, const char *s2, int n);
 
+char *string_char(const char *s, int c);
+
+char *string_r_char(const char *s, int c);
+
 #endif

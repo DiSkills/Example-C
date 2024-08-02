@@ -54,3 +54,23 @@ int string_n_compare(const char *s1, const char *s2, int n)
         {}
     return !n ? 0 : *s1 - *s2;
 }
+
+
+char *string_char(const char *s, int c)
+{
+    for (; *s && *s != c; s++)
+        {}
+    return *s ? (char*)s : NULL;
+}
+
+
+char *string_r_char(const char *s, int c)
+{
+    const char *p = NULL;
+    for (; *s; s++) {
+        if (*s == c) {
+            p = s;
+        }
+    }
+    return (char*)p;
+}
