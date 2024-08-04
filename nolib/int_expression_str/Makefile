@@ -1,4 +1,4 @@
-SRCMODULES = stack.c str.c
+SRCMODULES = stack.c str.c list.c
 OBJMODULES = $(SRCMODULES:.c=.o)
 
 CC = gcc
