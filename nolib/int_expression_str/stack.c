@@ -2,41 +2,37 @@
 
 #include "stack.h"
 
-
-void int_stack_init(struct int_stack *stack)
-{
-    stack->top = NULL;
-}
-
-
-void int_stack_destroy(struct int_stack *stack)
-{
-    while (!int_stack_empty(stack)) {
-        int_stack_pop(stack);
+#define DEFINE_STACK(TYPE) \
+    void TYPE ## _stack_init(struct TYPE ## _stack *stack) \
+    { \
+        stack->top = NULL; \
+    } \
+    void TYPE ## _stack_destroy(struct TYPE ## _stack *stack) \
+    { \
+        while (!TYPE ## _stack_empty(stack)) { \
+            TYPE ## _stack_pop(stack); \
+        } \
+    } \
+    void TYPE ## _stack_push(TYPE data, struct TYPE ## _stack *stack) \
+    { \
+        struct TYPE ## _stack_item *tmp = malloc(sizeof(struct TYPE ## _stack_item)); \
+        tmp->data = data; \
+        tmp->next = stack->top; \
+        stack->top = tmp; \
+    } \
+    int TYPE ## _stack_empty(const struct TYPE ## _stack *stack) \
+    { \
+        return stack->top == NULL; \
+    } \
+    TYPE TYPE ## _stack_pop(struct TYPE ## _stack *stack) \
+    { \
+        struct TYPE ## _stack_item *tmp = stack->top; \
+        TYPE data = tmp->data; \
+        stack->top = tmp->next; \
+        free(tmp); \
+        return data; \
     }
-}
 
 
-void int_stack_push(int data, struct int_stack *stack)
-{
-    struct int_stack_item *tmp = malloc(sizeof(struct int_stack_item));
-    tmp->data = data;
-    tmp->next = stack->top;
-    stack->top = tmp;
-}
-
-
-int int_stack_empty(const struct int_stack *stack)
-{
-    return stack->top == NULL;
-}
-
-
-int int_stack_pop(struct int_stack *stack)
-{
-    struct int_stack_item *tmp = stack->top;
-    int data = tmp->data;
-    stack->top = tmp->next;
-    free(tmp);
-    return data;
-}
+DEFINE_STACK(int)
+DEFINE_STACK(char)
