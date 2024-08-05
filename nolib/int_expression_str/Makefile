@@ -1,4 +1,4 @@
-SRCMODULES = stack.c
+SRCMODULES = stack.c calculate_expression.c
 OBJMODULES = $(SRCMODULES:.c=.o)
 
 CC = gcc
