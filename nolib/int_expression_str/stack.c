@@ -36,3 +36,20 @@
 
 DEFINE_STACK(int)
 DEFINE_STACK(char)
+
+
+#ifdef DEBUG
+#   define DEFINE_STACK_PRINT(TYPE, FORMAT) \
+        void TYPE ## _stack_print(FILE *stream, \
+                const struct TYPE ## _stack *stack) \
+        { \
+            const struct TYPE ## _stack_item *p; \
+            for (p = stack->top; p; p = p->next) { \
+                fprintf(stream, FORMAT " ", p->data); \
+            } \
+            fputc('\n', stream); \
+        }
+
+    DEFINE_STACK_PRINT(int, "%d")
+    DEFINE_STACK_PRINT(char, "%c")
+#endif

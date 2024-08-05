@@ -18,4 +18,14 @@
 DECLARE_STACK(int)
 DECLARE_STACK(char)
 
+#ifdef DEBUG
+#   include <stdio.h>
+#   define DECLARE_STACK_PRINT(TYPE) \
+        void TYPE ## _stack_print(FILE *stream, \
+                const struct TYPE ## _stack *stack);
+
+    DECLARE_STACK_PRINT(int)
+    DECLARE_STACK_PRINT(char)
+#endif
+
 #endif

@@ -3,12 +3,13 @@ OBJMODULES = $(SRCMODULES:.c=.o)
 
 CC = gcc
 CFLAGS = -ggdb -Wall
+CPPFLAGS = -DDEBUG
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 prog: main.c $(OBJMODULES)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
 -include deps.mk
 
