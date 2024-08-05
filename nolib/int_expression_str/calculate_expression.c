@@ -67,13 +67,11 @@ static void add_number(const char **expression, struct int_stack *values)
 }
 
 
-static void process_right_bracket(struct int_stack *values,
-        struct int_stack *operations)
+static void process_remaining_operations(struct int_stack *values,
+        struct char_stack *operations)
 {
     char op;
-    while (!int_stack_empty(operations)
-            && (op = int_stack_pop(operations)) != '(')
-    {
+    while ((op = char_stack_pop(operations)) != '(') {
         int b = int_stack_pop(values),
             a = int_stack_pop(values);
         int_stack_push(apply_operation(op, a, b), values);
@@ -82,27 +80,29 @@ static void process_right_bracket(struct int_stack *values,
 
 
 static void process_operation(char op, struct int_stack *values,
-        struct int_stack *operations)
+        struct char_stack *operations)
 {
     enum operation_priorities priority = priority_of(op);
     while (priority <= priority_of(operations->top->data)) {
         int b = int_stack_pop(values),
             a = int_stack_pop(values);
-        int_stack_push(apply_operation(int_stack_pop(operations), a, b), values);
+        char oper = char_stack_pop(operations);
+        int_stack_push(apply_operation(oper, a, b), values);
     }
-    int_stack_push(op, operations);
+    char_stack_push(op, operations);
 }
 
 
 int calculate_expression(const char *expression)
 {
     int result;
-    struct int_stack values,
-                     operations;
+    struct int_stack values;
+    struct char_stack operations;
 
     int_stack_init(&values);
-    int_stack_init(&operations);
-    int_stack_push('(', &operations);
+
+    char_stack_init(&operations);
+    char_stack_push('(', &operations);
 
     while (*expression) {
         char ch = *expression;
@@ -113,19 +113,19 @@ int calculate_expression(const char *expression)
         }
 
         if (ch == '(') {
-            int_stack_push(ch, &operations);
+            char_stack_push(ch, &operations);
         } else if (ch == ')') {
-            process_right_bracket(&values, &operations);
+            process_remaining_operations(&values, &operations);
         } else if (is_operation(ch)) {
             process_operation(ch, &values, &operations);
         }
 
         expression++;
     }
-    process_right_bracket(&values, &operations);
+    process_remaining_operations(&values, &operations);
 
     result = int_stack_pop(&values);
     int_stack_destroy(&values);
-    int_stack_destroy(&operations);
+    char_stack_destroy(&operations);
     return result;
 }
