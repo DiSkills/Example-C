@@ -27,7 +27,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    fddest = open(argv[2], O_TRUNC + O_CREAT + O_WRONLY, 0666);
+    fddest = open(argv[2], O_WRONLY|O_CREAT|O_TRUNC, 0666);
     if (fddest == -1) {
         write(2, err2msg, sizeof(err2msg) - 1);
         return 3;
