@@ -3,7 +3,7 @@
 #include <time.h>
 
 
-const char *get_file_type(int mode)
+static const char *get_file_type(int mode)
 {
     switch (mode & S_IFMT) {
         case S_IFBLK:
@@ -25,7 +25,7 @@ const char *get_file_type(int mode)
 }
 
 
-void print_stat(const struct stat *sb)
+static void print_stat(const struct stat *sb)
 {
     printf("ID of containing device: %lu\n", sb->st_dev);
     printf("I-node number: %lu\n", sb->st_ino);
@@ -47,7 +47,7 @@ void print_stat(const struct stat *sb)
 }
 
 
-int print_file_stat(const char *filename)
+static int print_file_stat(const char *filename)
 {
     int res;
     struct stat sb;
