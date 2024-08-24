@@ -9,7 +9,7 @@ enum {
 };
 
 
-void encrypt_buffer(void *buf, int len, unsigned key)
+static void encrypt_buffer(void *buf, int len, unsigned key)
 {
     unsigned *data = buf;
     int i,
@@ -23,7 +23,7 @@ void encrypt_buffer(void *buf, int len, unsigned key)
 }
 
 
-void encrypt(int fd, unsigned key)
+static void encrypt(int fd, unsigned key)
 {
     int rc;
     char buf[buffer_size];
