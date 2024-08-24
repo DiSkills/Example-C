@@ -1,12 +1,31 @@
 #include "path.h"
 
 
-void path_join(path_t *path, const char *s)
+static void path_append(path_t *path, const char *s)
 {
-    str_append(path, '/');
     for (; *s; s++) {
         str_append(path, *s);
     }
+}
+
+
+void path_init(path_t *path, const char *s)
+{
+    str_init(path);
+    path_append(path, s);
+}
+
+
+void path_del(path_t *path)
+{
+    str_del(path);
+}
+
+
+void path_join(path_t *path, const char *s)
+{
+    str_append(path, '/');
+    path_append(path, s);
 }
 
 
