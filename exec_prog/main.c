@@ -22,12 +22,12 @@ int main(int argc, char **argv)
     }
 
     if (pid == 0) {
-        int fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, 0666);
+        int fd = open(argv[1], O_RDONLY);
         if (fd == -1) {
             perror(argv[1]);
             exit(1);
         }
-        dup2(fd, 1);
+        dup2(fd, 0);
         close(fd);
 
         execvp(argv[2], argv + 2);
