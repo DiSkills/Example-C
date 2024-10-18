@@ -1,63 +1,41 @@
+#include <fcntl.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 
-static int is_separator(const char *s)
+int main(int argc, char **argv)
 {
-    return strcmp(s, ";;") == 0;
-}
+    pid_t pid;
 
-
-static void execute_command(const char *cmd, char * const * argv)
-{
-    int pid;
+    if (argc < 3) {
+        fprintf(stderr, "Too few arguments\n");
+        return 1;
+    }
 
     pid = fork();
     if (pid == -1) {
         perror("fork");
-        return;
+        return 2;
     }
 
     if (pid == 0) {
-        execvp(cmd, argv);
-        perror(cmd);
-        exit(1);
-    }
-}
-
-
-void print_successful_commands()
-{
-    int pid,
-        status;
-
-    while ((pid = wait(&status)) != -1) {
-        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            printf("%d\n", pid);
+        int fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, 0666);
+        if (fd == -1) {
+            perror(argv[1]);
+            exit(1);
         }
+        dup2(fd, 1);
+        close(fd);
+
+        execvp(argv[2], argv + 2);
+        perror(argv[2]);
+        exit(2);
     }
-}
 
-
-int main(int argc, char **argv)
-{
-    char **p;
-
-    for (argv++, p = argv; argc; argc--, p++) {
-        if (*p && !is_separator(*p)) {
-            continue;
-        }
-
-        *p = NULL;
-        if (argv != p) {
-            execute_command(argv[0], argv);
-        }
-        argv = p + 1;
-    }
-    print_successful_commands();
+    wait(NULL);
 
     return 0;
 }
