@@ -4,9 +4,16 @@
 #include <unistd.h>
 
 
+static const char msg1[] = "Humpty Dumpty sat on a wall,\n",
+                  msg2[] = "Humpty Dumpty had a great fall.\n",
+                  msg3[] = "All the king’s horses and all the king’s men\n",
+                  msg4[] = "Couldn’t put Humpty together again.\n";
+
+
 int main()
 {
-    int c;
+    int rc;
+    char buffer[4096];
     pid_t pid;
     int fd[2];
 
@@ -20,20 +27,18 @@ int main()
     }
     if (pid == 0) {
         close(fd[0]);
-        dup2(fd[1], 1);
 
-        printf("Humpty Dumpty sat on a wall,\n");
-        printf("Humpty Dumpty had a great fall.\n");
-        printf("All the king’s horses and all the king’s men\n");
-        printf("Couldn’t put Humpty together again.\n");
+        write(fd[1], msg1, sizeof(msg1) - 1);
+        write(fd[1], msg2, sizeof(msg2) - 1);
+        write(fd[1], msg3, sizeof(msg3) - 1);
+        write(fd[1], msg4, sizeof(msg4) - 1);
 
         exit(0);
     }
     close(fd[1]);
-    dup2(fd[0], 0);
 
-    while ((c = getchar()) != EOF) {
-        putchar(c);
+    while ((rc = read(fd[0], buffer, sizeof(buffer))) > 0) {
+        write(1, buffer, rc);
     }
     wait(NULL);
     return 0;
