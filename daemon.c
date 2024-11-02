@@ -76,6 +76,7 @@ int main()
     pid_t pid;
     time_t start;
     char buffer[buffer_size];
+    sigset_t mask_usr1, mask_empty;
 
     openlog(NAME, 0, LOG_USER);
     demonization();
@@ -89,13 +90,19 @@ int main()
     start = time(NULL);
 
     signal(SIGALRM, sigalarm_handler);
+
+    sigemptyset(&mask_usr1);
+    sigaddset(&mask_usr1, SIGUSR1);
+    sigemptyset(&mask_empty);
+
+    sigprocmask(SIG_SETMASK, &mask_usr1, NULL);
     signal(SIGUSR1, sigusr1_handler);
 
     syslog(LOG_INFO, "Started daemon");
     alarm(alarm_interval);
     for (;;) {
         int sz;
-        pause();
+        sigsuspend(&mask_empty);
         sz = snprintf(buffer, sizeof(buffer),
                       "%s: pid=%d, works %ld seconds, SIGUSR1: %d\n",
                       NAME, pid, time(NULL) - start, sigusr1cnt);
