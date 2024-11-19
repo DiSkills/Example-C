@@ -1,7 +1,10 @@
-#include <limits.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#include <limits.h>
+#include <string.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,7 +38,7 @@ static int atop(const char *s, in_port_t *port)
 
 int main(int argc, char **argv)
 {
-    int ok, sd;
+    int ok, sd, sr;
     in_port_t port;
     struct sockaddr_in addr;
 
@@ -61,6 +64,13 @@ int main(int argc, char **argv)
     if (sd == -1) {
         perror("socket");
         exit(4);
+    }
+
+    sr = sendto(sd, argv[3], strlen(argv[3]), 0,
+                (struct sockaddr *)&addr, sizeof(addr));
+    if (sr == -1) {
+        perror("sendto");
+        exit(5);
     }
 
     close(sd);
