@@ -38,7 +38,8 @@ static int atop(const char *s, in_port_t *port)
 
 int main(int argc, char **argv)
 {
-    int ok, sd, sr;
+    int sd;
+    int ok, sr;
     in_port_t port;
     struct sockaddr_in addr;
 
