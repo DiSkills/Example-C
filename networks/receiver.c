@@ -4,6 +4,7 @@
 
 #include <limits.h>
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -57,11 +58,17 @@ static void handle_datagram(int sd)
         return;
     }
 
-    printf("%s:%hu\n", inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+    printf("%s:%hu ", inet_ntoa(from.sin_addr), ntohs(from.sin_port));
     for (i = 0; i < rr; i++) {
         putchar(is_printable(buf[i]) ? buf[i] : '?');
     }
     putchar('\n');
+}
+
+
+static void sigint_handler(int signo)
+{
+    exit(0);
 }
 
 
@@ -71,6 +78,8 @@ int main(int argc, char **argv)
     int ok, br;
     unsigned short port;
     struct sockaddr_in addr;
+
+    signal(SIGINT, sigint_handler);
 
     if (argc != 2) {
         fprintf(stderr, "Expected port\n");
