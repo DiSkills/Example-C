@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 
 static int is_digit(char c)
@@ -34,7 +35,7 @@ static int atop(const char *s, in_port_t *port)
 
 int main(int argc, char **argv)
 {
-    int ok;
+    int ok, sd;
     in_port_t port;
     struct sockaddr_in addr;
 
@@ -49,7 +50,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "IP address is incorrect\n");
         exit(2);
     }
-
     ok = atop(argv[2], &port);
     if (!ok) {
         fprintf(stderr, "The port is not an unsigned short\n");
@@ -57,5 +57,12 @@ int main(int argc, char **argv)
     }
     addr.sin_port = htons(port);
 
+    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) {
+        perror("socket");
+        exit(4);
+    }
+
+    close(sd);
     return 0;
 }
