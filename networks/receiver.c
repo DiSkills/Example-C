@@ -15,7 +15,7 @@ static int is_digit(char c)
 }
 
 
-static int atop(const char *s, in_port_t *port)
+static int atop(const char *s, unsigned short *port)
 {
     unsigned number;
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 {
     int sd;
     int ok, br;
-    in_port_t port;
+    unsigned short port;
     struct sockaddr_in addr;
 
     if (argc != 2) {
