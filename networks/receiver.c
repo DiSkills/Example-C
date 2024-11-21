@@ -31,7 +31,7 @@ static int atop(const char *s, unsigned short *port)
     if (number > USHRT_MAX) {
         return 0;
     }
-    *port = number;
+    *port = htons(number);
     return 1;
 }
 
@@ -76,7 +76,6 @@ int main(int argc, char **argv)
 {
     int sd;
     int ok, br;
-    unsigned short port;
     struct sockaddr_in addr;
 
     signal(SIGINT, sigint_handler);
@@ -86,15 +85,13 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    ok = atop(argv[1], &port);
+    ok = atop(argv[1], &addr.sin_port);
     if (!ok) {
         fprintf(stderr, "The port is not an unsigned short\n");
         exit(2);
     }
-
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(port);
 
     sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sd == -1) {

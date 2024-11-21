@@ -31,7 +31,7 @@ static int atop(const char *s, unsigned short *port)
     if (number > USHRT_MAX) {
         return 0;
     }
-    *port = number;
+    *port = htons(number);
     return 1;
 }
 
@@ -40,7 +40,6 @@ int main(int argc, char **argv)
 {
     int sd;
     int ok, sr;
-    unsigned short port;
     struct sockaddr_in addr;
 
     if (argc != 4) {
@@ -54,12 +53,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "IP address is incorrect\n");
         exit(2);
     }
-    ok = atop(argv[2], &port);
+    ok = atop(argv[2], &addr.sin_port);
     if (!ok) {
         fprintf(stderr, "The port is not an unsigned short\n");
         exit(3);
     }
-    addr.sin_port = htons(port);
 
     sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sd == -1) {
