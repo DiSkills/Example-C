@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -50,36 +51,49 @@ static void dgram(int sd)
 }
 
 
-int main(int argc, char **argv)
+static void run_server(unsigned short port)
 {
     int sd;
-    int ok;
+    int res;
     sockaddr_in_t addr;
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = port;
+
+    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+    res = bind(sd, (sockaddr_t *)&addr, sizeof(addr));
+    if (res == -1) {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+
+    for (;;) {
+        dgram(sd);
+    }
+
+    close(sd);
+}
+
+
+int main(int argc, char **argv)
+{
+    unsigned short port;
 
     if (argc != 2) {
         fprintf(stderr, "Expected: %s <port>\n", argv[0]);
         return 1;
     }
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    addr.sin_port = inet_port_aton(argv[1]);
-    if (!addr.sin_port) {
+    port = inet_port_aton(argv[1]);
+    if (!port) {
         fprintf(stderr, "An incorrect port was entered\n");
         return 2;
     }
-
-    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sd == -1) {
-        perror("socket");
-        return 3;
-    }
-    ok = bind(sd, (sockaddr_t *)&addr, sizeof(addr));
-    if (ok == -1) {
-        perror("bind");
-        return 4;
-    }
-
-    close(sd);
+    run_server(port);
     return 0;
 }
