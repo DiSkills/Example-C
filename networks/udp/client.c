@@ -18,6 +18,28 @@ enum {
 
 static void send_datagram(unsigned ip, unsigned short port, int size)
 {
+    int sd;
+    int res;
+    char buf[BUFFER_SIZE];
+    struct sockaddr_in addr;
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = ip;
+    addr.sin_port = port;
+
+    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    res = sendto(sd, buf, size, 0, (struct sockaddr *)&addr, sizeof(addr));
+    if (res == -1) {
+        perror("sendto");
+        exit(EXIT_FAILURE);
+    }
+
+    close(sd);
 }
 
 
