@@ -13,7 +13,7 @@ static int is_digit(char c)
 
 unsigned short inet_port_aton(const char *s)
 {
-    int port;
+    unsigned port;
 
     port = 0;
     for (; *s; s++) {
