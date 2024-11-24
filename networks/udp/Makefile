@@ -7,6 +7,8 @@ CFLAGS = -ggdb -Wall
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+all: server client
+
 server: server.c $(OBJMODULES)
 	$(CC) $(CFLAGS) $^ -o $@
 
