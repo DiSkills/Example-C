@@ -10,8 +10,8 @@ CFLAGS = -ggdb -Wall
 server: server.c $(OBJMODULES)
 	$(CC) $(CFLAGS) $^ -o $@
 
-# client: client.c $(OBJMODULES)
-# 	$(CC) $(CFLAGS) $^ -o $@
+client: client.c $(OBJMODULES)
+	$(CC) $(CFLAGS) $^ -o $@
 
 ifneq (clean, $(MAKECMDGOALS))
 -include deps.mk
