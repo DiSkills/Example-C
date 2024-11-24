@@ -13,6 +13,7 @@
 
 enum {
     BUFFER_SIZE = 1500,
+    TIMEOUT_SECONDS = 15
 };
 
 
@@ -22,6 +23,8 @@ static void send_datagram(unsigned ip, unsigned short port, int size)
     int res;
     char buf[BUFFER_SIZE];
     struct sockaddr_in addr;
+    struct timeval tv;
+    socklen_t lenaddr;
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = ip;
@@ -38,6 +41,18 @@ static void send_datagram(unsigned ip, unsigned short port, int size)
         perror("sendto");
         exit(EXIT_FAILURE);
     }
+
+    tv.tv_sec = TIMEOUT_SECONDS;
+    setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    lenaddr = sizeof(addr);
+    res = recvfrom(sd, buf, sizeof(buf), 0,
+                   (struct sockaddr *)&addr, &lenaddr);
+    if (res == -1) {
+        perror("recvfrom");
+        exit(EXIT_FAILURE);
+    }
+    printf("%.*s\n", res, buf);
 
     close(sd);
 }
