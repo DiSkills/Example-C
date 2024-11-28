@@ -1,8 +1,15 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
 
 #include <arpa/inet.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+
+
+#define SERVER_NAME "mytcp"
 
 
 static int is_digit(char c)
@@ -30,6 +37,39 @@ static unsigned short inet_port_aton(const char *s)
 }
 
 
+static void reset_leadership()
+{
+    int pid;
+
+    pid = fork();
+    if (pid == -1) {
+        syslog(LOG_ERR, "fork: %m");
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+}
+
+
+static void daemonize()
+{
+    close(0);
+    close(1);
+    close(2);
+
+    open("/dev/null", O_RDONLY);
+    open("/dev/null", O_WRONLY);
+    open("/dev/null", O_WRONLY);
+
+    chdir("/");
+
+    reset_leadership();
+    setsid();
+    reset_leadership();
+}
+
+
 int main(int argc, char **argv)
 {
     unsigned short port;
@@ -44,5 +84,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "An incorrect port was entered\n");
         exit(EXIT_FAILURE);
     }
+    
+    openlog(SERVER_NAME, 0, LOG_USER);
+
+    daemonize();
+    
+    closelog();
     return 0;
 }
