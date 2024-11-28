@@ -1,15 +1,23 @@
 #include <limits.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
 
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #include <fcntl.h>
 #include <unistd.h>
 
 
 #define SERVER_NAME "mytcp"
+
+enum {
+    listen_queue_len = 16,
+    buffer_size = 256
+};
 
 
 static int is_digit(char c)
@@ -70,6 +78,68 @@ static void daemonize()
 }
 
 
+static void handle_request(int clsd, const struct sockaddr_in *addr)
+{
+    int wc, res;
+    char buf[buffer_size];
+    time_t now;
+
+    now = time(NULL);
+    wc = snprintf(buf, sizeof(buf), "Time: %sIP: %s:%hu\n", ctime(&now),
+                  inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+    res = write(clsd, buf, wc);
+    if (res == -1) {
+        syslog(LOG_WARNING, "write: %m");
+        return;
+    }
+    syslog(LOG_INFO, "The message was sent: %s", buf);
+}
+
+
+static void run_server(unsigned short port)
+{
+    int lsd;
+    int res;
+    struct sockaddr_in addr;
+
+    lsd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (lsd == -1) {
+        syslog(LOG_ERR, "socket: %m");
+        exit(EXIT_FAILURE);
+    }
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = port;
+
+#ifdef DEBUG
+    int opt = 1;
+    setsockopt(lsd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
+
+    res = bind(lsd, (struct sockaddr *)&addr, sizeof(addr));
+    if (res == -1) {
+        syslog(LOG_ERR, "bind: %m");
+        exit(EXIT_FAILURE);
+    }
+
+    listen(lsd, listen_queue_len);
+    syslog(LOG_INFO, "Server was started on port %hu", ntohs(port));
+
+    for (;;) {
+        int clsd;
+        socklen_t addrlen;
+
+        addrlen = sizeof(addr);
+        clsd = accept(lsd, (struct sockaddr *)&addr, &addrlen);
+        handle_request(clsd, &addr);
+        close(clsd);
+    }
+
+    close(lsd);
+}
+
+
 int main(int argc, char **argv)
 {
     unsigned short port;
@@ -88,6 +158,7 @@ int main(int argc, char **argv)
     openlog(SERVER_NAME, 0, LOG_USER);
 
     daemonize();
+    run_server(port);
     
     closelog();
     return 0;
