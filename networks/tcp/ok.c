@@ -60,6 +60,31 @@ static int server_init(struct server *serv, int port)
     return 1;
 }
 
+static void server_accept(struct server *serv)
+{
+    int i, fd;
+
+    fd = accept(serv->lsd, NULL, NULL);
+    if (fd == -1) {
+        perror("accept");
+        return;
+    }
+
+    if (fd >= serv->client_array_size) {
+        int newlen = serv->client_array_size;
+        for (; fd >= newlen; newlen += INIT_CLIENT_ARRAY_SIZE)
+            {}
+        serv->client_array = realloc(serv->client_array,
+                                     newlen * sizeof(*serv->client_array));
+        for (i = serv->client_array_size; i < newlen; i++) {
+            serv->client_array[i] = 0;
+        }
+        serv->client_array_size = newlen;
+    }
+
+    serv->client_array[fd] = 1;
+}
+
 static int server_run(struct server *serv)
 {
     for (;;) {
@@ -83,7 +108,7 @@ static int server_run(struct server *serv)
         }
 
         if (FD_ISSET(serv->lsd, &readfds)) {
-            /* TODO accept */
+            server_accept(serv);
         }
 
         for (fd = 0; fd < serv->client_array_size; fd++) {
