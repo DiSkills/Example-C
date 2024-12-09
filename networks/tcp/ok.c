@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 
@@ -15,12 +16,18 @@
 #define LISTEN_QLEN 16
 #endif
 
+#ifndef BUFFER_SIZE
+#define BUFFER_SIZE 1024
+#endif
+
 struct server {
     int lsd;
 
     int *client_array;
     int client_array_size;
 };
+
+const char msg[] = "Ok\n";
 
 
 static int server_init(struct server *serv, int port)
@@ -85,6 +92,30 @@ static void server_accept(struct server *serv)
     serv->client_array[fd] = 1;
 }
 
+static int server_handle_client(struct server *serv, int fd)
+{
+    int i, rc;
+    char buf[BUFFER_SIZE];
+
+    rc = read(fd, buf, sizeof(buf));
+    if (rc <= 0) {
+        return 0;
+    }
+
+    for (i = 0; i < rc; i++) {
+        if (buf[i] == '\n') {
+            write(fd, msg, sizeof(msg) - 1);
+        }
+    }
+    return 1;
+}
+
+static void server_close_connection(struct server *serv, int fd)
+{
+    close(fd);
+    serv->client_array[fd] = 0;
+}
+
 static int server_run(struct server *serv)
 {
     for (;;) {
@@ -113,7 +144,10 @@ static int server_run(struct server *serv)
 
         for (fd = 0; fd < serv->client_array_size; fd++) {
             if (serv->client_array[fd] && FD_ISSET(fd, &readfds)) {
-                /* TODO read */
+                int is_connection_open = server_handle_client(serv, fd);
+                if (!is_connection_open) {
+                    server_close_connection(serv, fd);
+                }
             }
         }
     }
