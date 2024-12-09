@@ -2,7 +2,10 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <sys/socket.h>
+
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
 
 #ifndef INIT_CLIENT_ARRAY_SIZE
 #define INIT_CLIENT_ARRAY_SIZE 16
@@ -57,9 +60,44 @@ static int server_init(struct server *serv, int port)
     return 1;
 }
 
+static int server_run(struct server *serv)
+{
+    for (;;) {
+        int fd, res;
+        fd_set readfds;
+        int maxfd = serv->lsd;
+
+        FD_ZERO(&readfds);
+        FD_SET(serv->lsd, &readfds);
+        for (fd = 0; fd < serv->client_array_size; fd++) {
+            if (serv->client_array[fd]) {
+                FD_SET(fd, &readfds);
+                maxfd = MAX(maxfd, fd);
+            }
+        }
+
+        res = select(maxfd + 1, &readfds, NULL, NULL, NULL);
+        if (res == -1) {
+            perror("select");
+            return 4;
+        }
+
+        if (FD_ISSET(serv->lsd, &readfds)) {
+            /* TODO accept */
+        }
+
+        for (fd = 0; fd < serv->client_array_size; fd++) {
+            if (serv->client_array[fd] && FD_ISSET(fd, &readfds)) {
+                /* TODO read */
+            }
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
-    int ok;
+    int ok, res;
     long port;
     char *endptr;
     struct server serv;
@@ -79,6 +117,7 @@ int main(int argc, char **argv)
     if (!ok) {
         return 3;
     }
-    /* TODO run server */
-    return 0;
+
+    res = server_run(&serv);
+    return res;
 }
