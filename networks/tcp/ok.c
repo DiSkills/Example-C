@@ -8,27 +8,41 @@
 
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 
-#ifndef INIT_CLIENT_ARRAY_SIZE
-#define INIT_CLIENT_ARRAY_SIZE 16
+#ifndef INIT_SESSION_ARRAY_SIZE
+#define INIT_SESSION_ARRAY_SIZE 16
 #endif
 
 #ifndef LISTEN_QLEN
 #define LISTEN_QLEN 16
 #endif
 
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1024
+#ifndef CLIENT_BUFFER_SIZE
+#define CLIENT_BUFFER_SIZE 2048
 #endif
+
+struct client_session {
+    int fd;
+    char buffer[CLIENT_BUFFER_SIZE];
+    int buffer_usage;
+};
 
 struct server {
     int lsd;
-
-    int *client_array;
-    int client_array_size;
+    long value;
+    struct client_session **session_array;
+    int session_array_size;
 };
 
 const char msg[] = "Ok\n";
 
+
+static struct client_session *make_new_session(int fd)
+{
+    struct client_session *session = malloc(sizeof(*session));
+    session->fd = fd;
+    session->buffer_usage = 0;
+    return session;
+}
 
 static int server_init(struct server *serv, int port)
 {
@@ -57,17 +71,18 @@ static int server_init(struct server *serv, int port)
 
     serv->lsd = lsd;
 
-    serv->client_array = malloc(sizeof(*serv->client_array) *
-                                INIT_CLIENT_ARRAY_SIZE);
-    serv->client_array_size = INIT_CLIENT_ARRAY_SIZE;
-    for (i = 0; i < serv->client_array_size; i++) {
-        serv->client_array[i] = 0;
+    serv->session_array = malloc(sizeof(*serv->session_array) *
+                                 INIT_SESSION_ARRAY_SIZE);
+    serv->session_array_size = INIT_SESSION_ARRAY_SIZE;
+    for (i = 0; i < serv->session_array_size; i++) {
+        serv->session_array[i] = NULL;
     }
 
+    serv->value = 0;
     return 1;
 }
 
-static void server_accept(struct server *serv)
+static void server_accept_client(struct server *serv)
 {
     int i, fd;
 
@@ -77,43 +92,31 @@ static void server_accept(struct server *serv)
         return;
     }
 
-    if (fd >= serv->client_array_size) {
-        int newlen = serv->client_array_size;
-        for (; fd >= newlen; newlen += INIT_CLIENT_ARRAY_SIZE)
+    if (fd >= serv->session_array_size) {
+        int newlen = serv->session_array_size;
+        for (; fd >= newlen; newlen += INIT_SESSION_ARRAY_SIZE)
             {}
-        serv->client_array = realloc(serv->client_array,
-                                     newlen * sizeof(*serv->client_array));
-        for (i = serv->client_array_size; i < newlen; i++) {
-            serv->client_array[i] = 0;
+        serv->session_array = realloc(serv->session_array,
+                                      newlen * sizeof(*serv->session_array));
+        for (i = serv->session_array_size; i < newlen; i++) {
+            serv->session_array[i] = NULL;
         }
-        serv->client_array_size = newlen;
+        serv->session_array_size = newlen;
     }
 
-    serv->client_array[fd] = 1;
+    serv->session_array[fd] = make_new_session(fd);
 }
 
 static int server_handle_client(struct server *serv, int fd)
 {
-    int i, rc;
-    char buf[BUFFER_SIZE];
-
-    rc = read(fd, buf, sizeof(buf));
-    if (rc <= 0) {
-        return 0;
-    }
-
-    for (i = 0; i < rc; i++) {
-        if (buf[i] == '\n') {
-            write(fd, msg, sizeof(msg) - 1);
-        }
-    }
-    return 1;
+    /* TODO */
 }
 
-static void server_close_connection(struct server *serv, int fd)
+static void server_close_client(struct server *serv, int fd)
 {
     close(fd);
-    serv->client_array[fd] = 0;
+    free(serv->session_array[fd]);
+    serv->session_array[fd] = NULL;
 }
 
 static int server_run(struct server *serv)
@@ -125,8 +128,8 @@ static int server_run(struct server *serv)
 
         FD_ZERO(&readfds);
         FD_SET(serv->lsd, &readfds);
-        for (fd = 0; fd < serv->client_array_size; fd++) {
-            if (serv->client_array[fd]) {
+        for (fd = 0; fd < serv->session_array_size; fd++) {
+            if (serv->session_array[fd]) {
                 FD_SET(fd, &readfds);
                 maxfd = MAX(maxfd, fd);
             }
@@ -139,14 +142,14 @@ static int server_run(struct server *serv)
         }
 
         if (FD_ISSET(serv->lsd, &readfds)) {
-            server_accept(serv);
+            server_accept_client(serv);
         }
 
-        for (fd = 0; fd < serv->client_array_size; fd++) {
-            if (serv->client_array[fd] && FD_ISSET(fd, &readfds)) {
-                int is_connection_open = server_handle_client(serv, fd);
-                if (!is_connection_open) {
-                    server_close_connection(serv, fd);
+        for (fd = 0; fd < serv->session_array_size; fd++) {
+            if (serv->session_array[fd] && FD_ISSET(fd, &readfds)) {
+                int is_client = server_handle_client(serv, fd);
+                if (!is_client) {
+                    server_close_client(serv, fd);
                 }
             }
         }
