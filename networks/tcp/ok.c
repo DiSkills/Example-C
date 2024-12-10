@@ -2,9 +2,11 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 
@@ -20,7 +22,7 @@
 #define CLIENT_BUFFER_SIZE 2048
 #endif
 
-struct client_session {
+struct session {
     int fd;
     char buffer[CLIENT_BUFFER_SIZE];
     int buffer_usage;
@@ -29,19 +31,73 @@ struct client_session {
 struct server {
     int lsd;
     long value;
-    struct client_session **session_array;
+    struct session **session_array;
     int session_array_size;
 };
 
-const char msg[] = "Ok\n";
+static const char ok[] = "Ok\n";
+static const char unknown[] = "Unknown command\n";
 
+static const char up[] = "up";
+static const char down[] = "down";
+static const char show[] = "show";
 
-static struct client_session *make_new_session(int fd)
+static int is_space(char c)
 {
-    struct client_session *session = malloc(sizeof(*session));
-    session->fd = fd;
-    session->buffer_usage = 0;
-    return session;
+    return c == ' ' || c == '\t';
+}
+
+static int find_newline_position(const char *buffer, int size)
+{
+    int i;
+
+    for (i = 0; i < size; i++) {
+        if (buffer[i] == '\n') {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static struct session *make_new_session(int fd)
+{
+    struct session *sess = malloc(sizeof(*sess));
+    sess->fd = fd;
+    sess->buffer_usage = 0;
+    return sess;
+}
+
+static void session_send_string(const struct session *sess, const char *s)
+{
+    write(sess->fd, s, strlen(s));
+}
+
+static void session_process_request(struct server *serv,
+                                    const struct session *sess, int pos)
+{
+    int len;
+    const char *start = sess->buffer,
+               *end = sess->buffer + pos;
+
+    for (; start < end && is_space(*start); start++)
+        {}
+    for (; end > start && is_space(*end); end--)
+        {}
+    len = end - start + 1;
+
+    if (len == sizeof(up) - 1 && strncmp(start, up, len) == 0) {
+        serv->value++;
+        session_send_string(sess, ok);
+    } else if (len == sizeof(down) - 1 && strncmp(start, down, len) == 0) {
+        serv->value--;
+        session_send_string(sess, ok);
+    } else if (len == sizeof(show) - 1 && strncmp(start, show, len) == 0) {
+        char buf[64];
+        snprintf(buf, sizeof(buf), "%ld\n", serv->value);
+        session_send_string(sess, buf);
+    } else {
+        session_send_string(sess, unknown);
+    }
 }
 
 static int server_init(struct server *serv, int port)
@@ -109,7 +165,32 @@ static void server_accept_client(struct server *serv)
 
 static int server_handle_client(struct server *serv, int fd)
 {
-    /* TODO */
+    int rc, pos;
+    struct session *sess = serv->session_array[fd];
+
+    rc = read(fd, sess->buffer + sess->buffer_usage,
+              sizeof(sess->buffer) - sess->buffer_usage);
+    if (rc <= 0) {
+        return 0;
+    }
+    sess->buffer_usage += rc;
+
+    while (-1 != (pos = find_newline_position(sess->buffer,
+                                              sess->buffer_usage)))
+    {
+        if (sess->buffer[pos - 1] == '\r') {
+            sess->buffer[pos - 1] = ' ';
+        }
+        session_process_request(serv, sess, pos - 1);
+        sess->buffer_usage -= pos + 1;
+        memmove(sess->buffer, sess->buffer + pos + 1, sess->buffer_usage);
+    }
+
+    if (sess->buffer_usage >= sizeof(sess->buffer)) {
+        session_send_string(sess, "The line is too long!\n");
+        return 0;
+    }
+    return 1;
 }
 
 static void server_close_client(struct server *serv, int fd)
