@@ -59,6 +59,11 @@ static int find_newline_position(const char *buffer, int size)
     return -1;
 }
 
+static int memequals(const char *m1, int len1, const char *m2, int len2)
+{
+    return len1 == len2 && strncmp(m1, m2, len1) == 0;
+}
+
 static struct session *make_new_session(int fd)
 {
     struct session *sess = malloc(sizeof(*sess));
@@ -85,13 +90,13 @@ static void session_process_request(struct server *serv,
         {}
     len = end - start + 1;
 
-    if (len == sizeof(up) - 1 && strncmp(start, up, len) == 0) {
+    if (memequals(start, len, up, sizeof(up) - 1)) {
         serv->value++;
         session_send_string(sess, ok);
-    } else if (len == sizeof(down) - 1 && strncmp(start, down, len) == 0) {
+    } else if (memequals(start, len, down, sizeof(down) - 1)) {
         serv->value--;
         session_send_string(sess, ok);
-    } else if (len == sizeof(show) - 1 && strncmp(start, show, len) == 0) {
+    } else if (memequals(start, len, show, sizeof(show) - 1)) {
         char buf[64];
         snprintf(buf, sizeof(buf), "%ld\n", serv->value);
         session_send_string(sess, buf);
