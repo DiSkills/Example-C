@@ -5,9 +5,48 @@
 
 #include "session.h"
 
+static int is_space(char c)
+{
+    return c == ' ' || c == '\t';
+}
+
 static void session_send_string(const struct session *sess, const char *str)
 {
     write(sess->fd, str, strlen(str));
+}
+
+static void session_handle(const struct session *sess, char *line)
+{
+    char *start, *end;
+
+    start = line;
+    end = line + strlen(line) - 1;
+    while (start < end && is_space(*start)) {
+        start++;
+    }
+    while (end > start && is_space(*end)) {
+        end--;
+    }
+
+    if (start >= end) {
+        return;
+    }
+    *(end + 1) = '\0';
+
+    if (0 == strcmp(start, "show")) {
+        char str[128];
+        sprintf(str, "%ld\n", *sess->pvalue);
+        session_send_string(sess, str);
+        return;
+    } else if (0 == strcmp(start, "up")) {
+        (*sess->pvalue)++;
+    } else if (0 == strcmp(start, "down")) {
+        (*sess->pvalue)--;
+    } else {
+        session_send_string(sess, "Unknown command\n");
+        return;
+    }
+    session_send_string(sess, "Ok\n");
 }
 
 static void session_check_lf(struct session *sess)
@@ -24,7 +63,7 @@ static void session_check_lf(struct session *sess)
         line = strdup(sess->buffer);
         sess->buffer_usage -= pos + 1;
         memmove(sess->buffer, lf + 1, sess->buffer_usage);
-        /* handle */
+        session_handle(sess, line);
         free(line);
     }
 }
