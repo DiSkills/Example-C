@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "server.h"
+
 int main(int argc, char **argv)
 {
+    int ok;
     long port;
     char *endptr;
+    struct server serv;
 
     if (argc != 2) {
         fprintf(stderr, "Expected: %s <port>\n", argv[0]);
@@ -16,5 +20,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "The port is invalid\n");
         return 2;
     }
-    return 0;
+
+    ok = server_init(&serv, port);
+    if (!ok) {
+        return 3;
+    }
+    return 0; /* TODO: server_run */
 }
