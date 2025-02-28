@@ -1,7 +1,8 @@
 #include <netinet/in.h>
-#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
+#include <sys/socket.h>
 
 #include "server.h"
 
@@ -38,4 +39,41 @@ int server_init(struct server *serv, int port)
         serv->session_array[i] = NULL;
     }
     return 1;
+}
+
+int server_run(struct server *serv)
+{
+    for (;;) {
+        int fd, res;
+        fd_set readfds;
+        int maxfd = serv->lsd;
+
+        FD_ZERO(&readfds);
+        FD_SET(serv->lsd, &readfds);
+        for (fd = 0; fd < serv->session_array_size; fd++) {
+            if (serv->session_array[fd]) {
+                FD_SET(fd, &readfds);
+                if (fd > maxfd) {
+                    maxfd = fd;
+                }
+            }
+        }
+
+        res = select(maxfd + 1, &readfds, NULL, NULL, NULL);
+        if (res == -1) {
+            perror("select");
+            return 4;
+        }
+
+        if (FD_ISSET(serv->lsd, &readfds)) {
+            /* TODO: accept */
+        }
+
+        for (fd = 0; fd < serv->session_array_size; fd++) {
+            if (serv->session_array[fd] && FD_ISSET(fd, &readfds)) {
+                /* TODO: receive */
+            }
+        }
+    }
+    return 0;
 }
