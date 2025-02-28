@@ -6,6 +6,32 @@
 
 #include "server.h"
 
+static void server_accept_client(struct server *serv)
+{
+    int fd, i;
+
+    fd = accept(serv->lsd, NULL, NULL);
+    if (fd == -1) {
+        perror("accept");
+        return;
+    }
+
+    if (fd >= serv->session_array_size) {
+        int newlen = serv->session_array_size;
+        while (fd >= newlen) {
+            newlen += INIT_SESSION_ARRAY_SIZE;
+        }
+        serv->session_array = realloc(serv->session_array,
+                newlen * sizeof(*serv->session_array));
+        for (i = serv->session_array_size; i < newlen; i++) {
+            serv->session_array[i] = NULL;
+        }
+        serv->session_array_size = newlen;
+    }
+    /* TODO: make a new session */
+    /* serv->session_array[fd] = make_new_session(fd); */
+}
+
 int server_init(struct server *serv, int port)
 {
     int i, lsd, opt, res;
@@ -31,6 +57,7 @@ int server_init(struct server *serv, int port)
 
     listen(lsd, LISTEN_QLEN);
     serv->lsd = lsd;
+    serv->value = 0;
 
     serv->session_array =
         malloc(INIT_SESSION_ARRAY_SIZE * sizeof(*serv->session_array));
@@ -66,7 +93,7 @@ int server_run(struct server *serv)
         }
 
         if (FD_ISSET(serv->lsd, &readfds)) {
-            /* TODO: accept */
+            server_accept_client(serv);
         }
 
         for (fd = 0; fd < serv->session_array_size; fd++) {

@@ -14,6 +14,8 @@ struct server {
 
     void **session_array; /* TODO: struct session */
     int session_array_size;
+
+    long value;
 };
 
 int server_init(struct server *serv, int port);
