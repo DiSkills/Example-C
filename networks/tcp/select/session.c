@@ -10,6 +10,25 @@ static void session_send_string(const struct session *sess, const char *str)
     write(sess->fd, str, strlen(str));
 }
 
+static void session_check_lf(struct session *sess)
+{
+    char *lf;
+    while ((lf = memchr(sess->buffer, '\n', sess->buffer_usage)) != NULL) {
+        char *line;
+        int pos = lf - sess->buffer;
+        if (pos > 0 && sess->buffer[pos - 1] == '\r') {
+            sess->buffer[pos - 1] = '\0';
+        }
+        sess->buffer[pos] = '\0';
+
+        line = strdup(sess->buffer);
+        sess->buffer_usage -= pos + 1;
+        memmove(sess->buffer, lf + 1, sess->buffer_usage);
+        /* handle */
+        free(line);
+    }
+}
+
 struct session *session_init(int fd, long *pvalue)
 {
     struct session *sess = malloc(sizeof(*sess));
@@ -40,7 +59,7 @@ int session_receive(struct session *sess)
     }
     sess->buffer_usage += rc;
 
-    /* TODO: check */
+    session_check_lf(sess);
     if (sess->buffer_usage >= sizeof(sess->buffer)) {
         session_send_string(sess, "Line is too long...\n");
         return 0;
