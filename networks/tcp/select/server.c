@@ -28,8 +28,7 @@ static void server_accept_client(struct server *serv)
         }
         serv->session_array_size = newlen;
     }
-    /* TODO: make a new session */
-    /* serv->session_array[fd] = make_new_session(fd); */
+    serv->session_array[fd] = session_init(fd);
 }
 
 int server_init(struct server *serv, int port)
