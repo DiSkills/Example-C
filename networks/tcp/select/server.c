@@ -29,7 +29,7 @@ static void server_accept_client(struct server *serv)
         }
         serv->session_array_size = newlen;
     }
-    serv->session_array[fd] = session_init(fd);
+    serv->session_array[fd] = session_init(fd, &serv->value);
 }
 
 static void server_close_client(struct server *serv, int fd)
@@ -108,8 +108,10 @@ int server_run(struct server *serv)
 
         for (fd = 0; fd < serv->session_array_size; fd++) {
             if (serv->session_array[fd] && FD_ISSET(fd, &readfds)) {
-                /* TODO: receive */
-                server_close_client(serv, fd);
+                int srr = session_receive(serv->session_array[fd]);
+                if (!srr) {
+                    server_close_client(serv, fd);
+                }
             }
         }
     }

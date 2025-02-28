@@ -9,9 +9,11 @@ struct session {
     int fd;
     char buffer[INIT_SESSION_BUFFER_SIZE];
     int buffer_usage;
+    long *pvalue;
 };
 
-struct session *session_init(int fd);
+struct session *session_init(int fd, long *pvalue);
 void session_del(struct session *sess);
+int session_receive(struct session *sess);
 
 #endif

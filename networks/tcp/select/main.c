@@ -25,5 +25,5 @@ int main(int argc, char **argv)
     if (!ok) {
         return 3;
     }
-    return 0; /* TODO: server_run */
+    return server_run(&serv);
 }
