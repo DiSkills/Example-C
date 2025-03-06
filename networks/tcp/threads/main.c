@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "server.h"
+
 int main(int argc, char **argv)
 {
+    int lsd;
     long port;
     char *endptr;
 
@@ -17,5 +20,9 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    lsd = server_init(port);
+    if (lsd == -1) {
+        return 3;
+    }
     return 0;
 }
