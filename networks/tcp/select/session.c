@@ -10,6 +10,25 @@ static int is_space(char c)
     return c == ' ' || c == '\t';
 }
 
+static char *strip(char *s)
+{
+    char *end;
+
+    while (is_space(*s)) {
+        s++;
+    }
+    if (!*s) {
+        return s;
+    }
+
+    end = s + strlen(s) - 1;
+    while (end > s && is_space(*end)) {
+        end--;
+    }
+    *(end + 1) = '\0';
+    return s;
+}
+
 static void session_send_string(const struct session *sess, const char *str)
 {
     write(sess->fd, str, strlen(str));
@@ -17,30 +36,16 @@ static void session_send_string(const struct session *sess, const char *str)
 
 static void session_handle(const struct session *sess, char *line)
 {
-    char *start, *end;
+    line = strip(line);
 
-    start = line;
-    end = line + strlen(line) - 1;
-    while (start < end && is_space(*start)) {
-        start++;
-    }
-    while (end > start && is_space(*end)) {
-        end--;
-    }
-
-    if (start >= end) {
-        return;
-    }
-    *(end + 1) = '\0';
-
-    if (0 == strcmp(start, "show")) {
+    if (0 == strcmp(line, "show")) {
         char str[128];
         sprintf(str, "%ld\n", *sess->pvalue);
         session_send_string(sess, str);
         return;
-    } else if (0 == strcmp(start, "up")) {
+    } else if (0 == strcmp(line, "up")) {
         (*sess->pvalue)++;
-    } else if (0 == strcmp(start, "down")) {
+    } else if (0 == strcmp(line, "down")) {
         (*sess->pvalue)--;
     } else {
         session_send_string(sess, "Unknown command\n");
