@@ -24,5 +24,5 @@ int main(int argc, char **argv)
     if (lsd == -1) {
         return 3;
     }
-    return 0;
+    return server_run(lsd);
 }
