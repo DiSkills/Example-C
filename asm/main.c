@@ -12,9 +12,7 @@ static const char err2msg[] = "Couldn't open destination file for writing\n";
 
 int main(int argc, char **argv)
 {
-    int s,
-        fdsrc,
-        fddest;
+    int s, fdsrc, fddest;
 
     if (argc != 3) {
         write(2, helpmsg, sizeof(helpmsg) - 1);
@@ -27,7 +25,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    fddest = open(argv[2], O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    fddest = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fddest == -1) {
         write(2, err2msg, sizeof(err2msg) - 1);
         return 3;
