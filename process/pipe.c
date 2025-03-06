@@ -1,26 +1,25 @@
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 
-typedef char **argv_t;
-
-
 static volatile sig_atomic_t pipe_is_closed = 0;
 
-
-static void run_child(const argv_t argv, int fd[2])
+static void sigpipe_handler(int signo)
 {
-    pid_t pid;
+    pipe_is_closed = 1;
+}
 
-    pid = fork();
+static void run_child(char **argv, int *fd)
+{
+    int pid = fork();
     if (pid == -1) {
         perror("fork");
         exit(2);
     }
-
     if (pid == 0) {
         close(fd[1]);
         dup2(fd[0], 0);
@@ -32,17 +31,9 @@ static void run_child(const argv_t argv, int fd[2])
     }
 }
 
-
-static void sigpipe_handler(int signum)
+int main(int argc, char **argv)
 {
-    pipe_is_closed = 1;
-}
-
-
-int main(int argc, argv_t argv)
-{
-    int i,
-        status;
+    int i, status;
     FILE *fchld;
     int fd[2];
 
@@ -68,6 +59,5 @@ int main(int argc, argv_t argv)
     } else {
         printf("Terminated: %d\n", WTERMSIG(status));
     }
-
     return 0;
 }
