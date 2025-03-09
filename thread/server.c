@@ -11,7 +11,6 @@
 
 #include "server.h"
 
-
 struct thread_start_data {
     int fd;
     long *pvalue;
@@ -178,13 +177,16 @@ int server_run(int lsd)
     sem_init(&data_sem, 0, 0);
 
     for (;;) {
+        int fd;
         pthread_t th;
 
-        tsdata.fd = accept(lsd, NULL, NULL);
-        if (tsdata.fd == -1) {
+        fd = accept(lsd, NULL, NULL);
+        if (fd == -1) {
             perror("accept");
             continue;
         }
+        tsdata.fd = fd;
+
         pthread_create(&th, NULL, worker, &tsdata);
         pthread_detach(th);
         sem_wait(&data_sem);

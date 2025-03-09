@@ -3,12 +3,13 @@ OBJMODULES = $(SRCMODULES:.c=.o)
 
 CC = gcc
 CFLAGS = -ggdb -Wall
+LIBS = -lpthread
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 prog: main.c $(OBJMODULES)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
 ifneq (clean, $(MAKECMDGOALS))
 -include deps.mk
