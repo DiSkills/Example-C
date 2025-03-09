@@ -1,20 +1,22 @@
-#include <signal.h>
 #include <stdio.h>
+
+#include <signal.h>
 #include <unistd.h>
 
-
-volatile static sig_atomic_t n = 0;
-volatile static sig_atomic_t is_caught = 0;
-
+static volatile sig_atomic_t n = 0;
+static volatile sig_atomic_t is_caught = 0;
 
 static void handler(int signo)
 {
     signal(signo, handler);
 
-    if (signo == SIGINT) {
+    switch (signo) {
+    case SIGINT:
         n++;
-    } else if (signo == SIGUSR1) {
+        break;
+    case SIGUSR1:
         is_caught = 1;
+        break;
     }
 }
 

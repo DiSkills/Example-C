@@ -2,13 +2,11 @@
 #include <signal.h>
 #include <unistd.h>
 
+static volatile sig_atomic_t n = 0;
 
-volatile static sig_atomic_t n = 0;
+static const char msg[] = "Press it again, I like it!\n";
 
-static const char msg[] = "Press it again, I like it\n";
-
-
-static void handler(int s)
+static void handler(int signo)
 {
     int save_errno = errno;
 
@@ -20,7 +18,6 @@ static void handler(int s)
     errno = save_errno;
 }
 
-
 int main()
 {
     signal(SIGINT, handler);
@@ -28,6 +25,5 @@ int main()
     while (n < 25) {
         pause();
     }
-
     return 0;
 }
